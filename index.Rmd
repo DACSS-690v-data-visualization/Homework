@@ -1,0 +1,32 @@
+---
+title: "Tenzin Lhamo's Dashbord for DACSS Data Visualization"
+bibliography: library.bib
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard) # always
+library(ggplot2)
+library(scales)
+```
+
+## Intro {.sidebar}
+
+Preparing the dashboard based on the instructions given at @magallanes_reyes_data_2022, and aden-buie_flexdashboard_2024.
+
+### References
+<div id="refs"></div>
+
+## Column {data-width="450"}
+
+### Deliverable 1 Barplot <!-- Suburb Locale Distribution Barplot -->
+
+```{r, cache = FALSE, fig.width = 8, fig.height = 6}
+#load the saved plot from the RDS file
+plot_data = readRDS('newPlot.rds')
+newPlot = plot_data$plot
+LABELS = plot_data$labels
+print(newPlot)
+```
