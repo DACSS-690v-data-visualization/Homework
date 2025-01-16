@@ -19,39 +19,9 @@ Preparing the dashboard based on the instructions given at @magallanes_reyes_dat
 ### References
 <div id="refs"></div>
 
-
-To organize your Flexdashboard into tabs rather than all sections being on one page, you can structure your R Markdown using Level 2 headers (##) to define separate tabs. This will ensure that each tab occupies the full space, making your plots appear larger and easier to read.
-
-Updated Layout for Tabs in Flexdashboard:
-Here’s how you can revise your layout:
-
-yaml
-Copy
-Edit
----
-title: "Tenzin Lhamo's Dashboard for DACSS Data Visualization"
-bibliography: library.bib
-output: 
-  flexdashboard::flex_dashboard:
-    orientation: rows
-    vertical_layout: fill
----
-R Markdown Body:
-Use Level 2 Headers (##) for tabs and organize your plots accordingly:
-
-markdown
-Copy
-Edit
-## Intro {.sidebar}
-
-Preparing the dashboard based on the instructions given at @magallanes_reyes_data_2022, and aden-buie_flexdashboard_2024.
-
-### References
-<div id="refs"></div>
-
 ---
 
-## Deliverable 1 Plot <!-- Suburb Locale Distribution Barplot -->
+### Deliverable 1 Plot <!-- Suburb Locale Distribution Barplot -->
 
 ```{r, cache = FALSE, fig.width = 10, fig.height = 6}
 #load the saved plot from the RDS file
@@ -61,7 +31,7 @@ LABELS = plot_data$labels
 print(newPlot)
 ```
 
-## Deliverable 2 Plot <!-- MA State Police Arrest Type-Age Barplot -->
+### Deliverable 2 Plot <!-- MA State Police Arrest Type-Age Barplot -->
 
 ```{r, cache = FALSE, fig.width = 10, fig.height = 6}
 plot2 = readRDS('plot2.rds')
