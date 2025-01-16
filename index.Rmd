@@ -3,8 +3,7 @@ title: "Tenzin Lhamo's Dashboard for DACSS Data Visualization"
 bibliography: library.bib
 output: 
   flexdashboard::flex_dashboard:
-    orientation: rows
-    vertical_layout: fill
+    storyboard: true
 ---
 
 ```{r setup, include=FALSE}
