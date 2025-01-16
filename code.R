@@ -70,3 +70,66 @@ newPlot = plot +
 print(newPlot)
 
 saveRDS(list(plot = newPlot, labels = LABELS), file = 'newPlot.rds') #save plot as rds file
+
+# Homework 2: Arrest Type-Age Plot --------------------------------------------------------------
+
+#Step 1: clean the environment
+rm(list = ls()) # Remove all objects from memory
+
+#Step 2: load and retrieve data
+linkMass = "https://github.com/DACSS-Visual/tabular_bivar_catcat/raw/refs/heads/main/data/MSP%20DFS%20Arrests%2019-20Q1.xlsx"
+library(rio) 
+library(dplyr)
+library(ggplot2)
+library(janitor) #load necessary libraries
+arrests = rio::import(linkMass, which = 1)
+
+#Step 3: filter and merge data 
+sheet_2 = rio::import(linkMass, which = 2, skip = 74) %>% #load sheet 2, skip first 74 rows
+  clean_names() %>% #standardize names
+  select(code, arrest_type) #select relevant columns
+
+arrests = arrests %>%
+  filter(!is.na(`Arrest Type`) & !is.na(Age)) %>% #remove missing values
+  left_join(sheet_2, by = c('Arrest Type' = 'code')) #join arrest type description with code
+  
+head(arrests) #inspect data
+summary(arrests)
+
+#Step 4: prepare data
+arrest_summary = arrests %>%
+  group_by(arrest_type, Age) %>% #group by arrest type and age
+  summarise(count = n(), .groups = 'drop') #count arrests by type and age
+
+arrest_summary$arrest_type = factor(
+  arrest_summary$arrest_type,
+  levels = c('Felony', 'Misdemeanor', 'Warrant', 'Other')) #order by arrest type weight
+
+#Step 5: create plot
+plot2 = ggplot(arrest_summary, aes(x = Age, y = count, fill = arrest_type)) + 
+  geom_bar(stat = 'identity', color = 'black', fill = 'grey', alpha = 0.7) + 
+  facet_wrap(~arrest_type, scales = 'free_y') + #create facet plot
+  scale_x_continuous(
+    breaks = seq(0, max(arrest_summary$Age), by = 10),  #break every 10 years
+    labels = seq(0, max(arrest_summary$Age), by = 10)   #label every 10 years
+  ) +
+  labs( #create plot labels
+    title = 'Young Adults Face Higher Arrest Rates Across Arrest Type Categories in Massachusetts',
+    subtitle = 'Among younger age groups, Felony and Misdemeanors are more frequent, Warrants have a moderate frequency and Others is less frequent.',
+    caption = 'Source: Massachusetts State Police from the Field Services and Investigative Divisions from January 2019 to March 2020',
+    x = 'Age',
+    y = 'Number of Arrests',
+    fill = 'Arrest Type'
+  ) +
+  theme_minimal() + #choose minimal theme
+  theme(
+    strip.text = element_text(size = 10, face = 'bold'),
+    strip.background = element_blank(),
+    legend.position = 'none',
+    axis.text.x = element_text(color = 'black'), #resize and recolor x and y axes texts and titles
+    axis.title.x = element_text(size = 12),
+    axis.text.y = element_text(color = 'black'),
+    axis.title.y = element_text(size = 12)
+  )
+
+saveRDS(plot2, file = 'plot2.rds') #save plot as rds file
