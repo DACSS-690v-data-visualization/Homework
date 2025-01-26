@@ -133,3 +133,135 @@ plot2 = ggplot(arrest_summary, aes(x = Age, y = count, fill = arrest_type)) +
   )
 
 saveRDS(plot2, file = 'plot2.rds') #save plot as rds file
+
+# Homework 3: Boston Political Finances Choropleth Map --------------------------------------------------------------
+
+#Step 1: clean the environment
+rm(list = ls()) # Remove all objects from memory
+
+#Step 2: load and retrieve data
+#load libraries
+library(sf)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+#load contribution data
+linkBoston = "https://github.com/DACSS-Visual/SpatialData/raw/refs/heads/main/data/BostonContrib.xlsx"
+bostonCont = rio::import(linkBoston)
+head(bostonCont) #view first few rows 
+summary(bostonCont$Amount) #inspect summary of Amount variable
+tapply(bostonCont$Amount, bostonCont$'Tender Type Description', summary) #inspect Tender Type Description variable
+
+#load zip code data 
+linkZips = 'https://raw.githubusercontent.com/DACSS-Visual/SpatialData/refs/heads/main/data/zip_codes.json'
+bostonZips = sf::read_sf(linkZips)
+head(bostonZips) #view first few rows
+
+#Step 3: filter and merge data 
+selected_tender = c("Check", "Credit Card") #filter contributions by Check and Credit Card
+bostonCont_filtered = bostonCont %>%
+  filter(`Tender Type Description` %in% selected_tender)
+
+aggregate_boston_data = bostonCont_filtered %>% #aggregate by zip code and tender type
+  group_by(Zip, Tender = `Tender Type Description`) %>%
+  summarise(Total_Amount = sum(Amount, na.rm = TRUE), .groups = 'drop') #summarise total contribution amounts
+
+head(aggregate_boston_data) #view first few rows of aggregated data 
+
+#reshape data to wide format
+wide_boston_data = aggregate_boston_data %>%
+  pivot_wider(
+    names_from = Tender,
+    values_from = Total_Amount,
+    values_fill = 0
+  )
+
+head(wide_boston_data) #view first few rows 
+
+#merge wide_boston_data with map bostonZips
+bostonZips = bostonZips %>%
+  mutate(Zip = as.character(ZIP5)) #convert ZIP5 to character
+
+boston_merged_data = bostonZips %>% #merge data
+  left_join(wide_boston_data, by = 'Zip')
+
+boston_merged_data <- boston_merged_data %>% #remove NA values
+  filter(!is.na(Check) & !is.na(`Credit Card`))
+
+#Step 4: create plot
+
+#customize colors by check and credit card 
+check_colors = c('Very Low (<30,000)' = '#ffffcc',
+                 'Low (30,000-59,999)' = '#ffeda0',
+                 'Moderate (60,000-89,999)' = '#feb24c',
+                 'High (90,000-119,999)' = '#fd8d3c',
+                 'Very High (>=120,000)' = '#f03b20')
+
+credit_colors = c('Very Low (<40,000)' = '#edf8fb',
+                  'Low (40,000-69,999)' = '#b2e2e2',
+                  'Moderate (70,000-99,999)' = '#66c2a4',
+                  'High (100,000-129,999)' = '#2ca25f',
+                  'Very High (>=130,000)' = '#006d2c')
+
+#categorize contribution amounts
+boston_merged_data = boston_merged_data %>%
+  mutate(check_cat = cut(Check,
+                         breaks = c(-Inf, 30000, 60000, 90000, 120000, Inf),
+                         labels = c('Very Low (<30,000)',
+                                    'Low (30,000-59,999)',
+                                    'Moderate (60,000-89,999)',
+                                    'High (90,000-119,999)',
+                                    'Very High (>=120,000)'
+                                    ),
+                         right = FALSE),
+         credit_cat = cut(`Credit Card`, 
+                          breaks = c(-Inf, 40000, 70000, 100000, 130000, Inf),
+                          labels = c('Very Low (<40,000)',
+                                     'Low (40,000-69,999)',
+                                     'Moderate (70,000-99,999)',
+                                     'High (100,000-129,999)',
+                                     'Very High (>=130,000)'
+                                     ),
+                          right = FALSE)
+  )
+
+#convert format to factor
+boston_merged_data$check_cat <- factor(boston_merged_data$check_cat)
+boston_merged_data$credit_cat <- factor(boston_merged_data$credit_cat)
+
+#create base map
+base = ggplot() + geom_sf(data = bostonZips, fill = 'gray90', color = 'white')
+
+#add check contribution layers 
+plot3 = base +
+  geom_sf(data = boston_merged_data,
+          aes(fill = check_cat),
+          color = NA) +
+  scale_fill_manual(values = check_colors) +
+  labs(fill = 'Contribution Category (USD)',
+       title = 'Check Contributions to Political Campaigns in Boston',
+       subtitle = 'Grouped by Category',
+       caption = 'Source: Massachusetts Office of Campaign and Political Finance') +
+  theme_minimal() +
+  theme(
+    plot.subtitle = element_text(size = 10) #decrease subtitle font size
+   )
+saveRDS(plot3, file = 'plot3.rds') #save plot as rds file
+
+
+#add credit card contribution layers 
+plot4 = base + 
+  geom_sf(data = boston_merged_data,
+          aes(fill = credit_cat),
+          color = NA) +
+  scale_fill_manual(values = credit_colors) +
+  labs(fill = 'Contribution Category (USD)',
+       title = 'Credit Card Contributions to Political Campaigns in Boston',
+       subtitle = 'Grouped by Category',
+       caption = 'Source: Massachusetts Office of Campaign and Political Finance') +
+  theme_minimal() +
+  theme(
+    plot.subtitle = element_text(size = 10)
+  )
+saveRDS(plot4, file = 'plot4.rds') #save plot as rds file

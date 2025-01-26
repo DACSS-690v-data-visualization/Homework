@@ -37,3 +37,20 @@ print(newPlot)
 plot2 = readRDS('plot2.rds')
 print(plot2)
 ```
+
+
+### Deliverable 3 Check Plot <!-- Political Contributions in Boston Choropleths -->
+
+```{r, cache = FALSE, fig.width = 10, fig.height = 6}
+plot3 = readRDS('plot3.rds')
+print(plot3)
+```
+
+Row {data-height=400}
+-----------------------------------------------------------------------
+  
+### Deliver 3 Credit Card Plot
+```{r, cache = FALSE, fig.width = 10, fig.height = 6}
+plot4 = readRDS('plot4.rds')
+print(plot4)
+```
